@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerebrocal – Layout & States</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #09090B;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    min-height: 100vh;
+  }
+
+  h2 { font-size: 1.1rem; font-weight: 600; color: #a1a1aa; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .section-label { font-size: 0.7rem; color: #52525b; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 20px; }
+
+  /* ===== LAYOUT COMPARISON ===== */
+  .layouts { display: flex; gap: 16px; padding: 24px; flex-wrap: wrap; }
+
+  .layout-card {
+    flex: 1; min-width: 280px; border: 1px solid #27272a; border-radius: 12px;
+    overflow: hidden; cursor: pointer; transition: border-color 0.2s;
+    background: #111113;
+  }
+  .layout-card:hover { border-color: #3f3f46; }
+  .layout-card.selected { border-color: #06b6d4; box-shadow: 0 0 0 1px #06b6d4, 0 0 20px rgba(6,182,212,0.15); }
+
+  .layout-header {
+    padding: 10px 14px; background: #18181b; border-bottom: 1px solid #27272a;
+    font-size: 0.75rem; color: #71717a; display: flex; align-items: center; gap: 8px;
+  }
+  .layout-header strong { color: #e4e4e7; font-size: 0.85rem; }
+  .badge { background: #27272a; border-radius: 4px; padding: 2px 6px; font-size: 0.65rem; color: #a1a1aa; }
+
+  /* LAYOUT A - Full bleed hero */
+  .la-body { position: relative; height: 360px; background: #09090B; display: flex; flex-direction: column; align-items: center; }
+  .la-hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; width: 100%; }
+  .la-orb {
+    width: 100px; height: 100px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #22d3ee, #7c3aed, #0a0a0b);
+    box-shadow: 0 0 40px rgba(34,211,238,0.35), 0 0 80px rgba(124,58,237,0.2);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  @keyframes breathe { 0%,100% { transform: scale(1); box-shadow: 0 0 40px rgba(34,211,238,0.35), 0 0 80px rgba(124,58,237,0.2); } 50% { transform: scale(1.06); box-shadow: 0 0 60px rgba(34,211,238,0.5), 0 0 100px rgba(124,58,237,0.3); } }
+  .la-title { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+  .la-sub { font-size: 0.7rem; color: #52525b; }
+  .la-btn {
+    padding: 8px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 9999px; font-size: 0.75rem; color: #a1a1aa;
+    backdrop-filter: blur(8px);
+  }
+  .la-transcript {
+    width: 100%; max-height: 110px; overflow: hidden;
+    background: rgba(255,255,255,0.02); border-top: 1px solid #1f1f23;
+    padding: 8px 12px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .msg { font-size: 0.68rem; line-height: 1.4; }
+  .msg.ai { color: #06b6d4; }
+  .msg.user { color: #a1a1aa; text-align: right; }
+
+  /* LAYOUT B - Split: orb left, transcript right */
+  .lb-body { height: 360px; display: flex; }
+  .lb-left {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    border-right: 1px solid #1f1f23; padding: 16px;
+  }
+  .lb-orb {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #22d3ee, #7c3aed, #0a0a0b);
+    box-shadow: 0 0 40px rgba(34,211,238,0.35), 0 0 80px rgba(124,58,237,0.2);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  .lb-label { font-size: 0.65rem; color: #52525b; text-transform: uppercase; letter-spacing: 0.08em; }
+  .lb-right { flex: 1.2; padding: 12px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .lb-right-title { font-size: 0.7rem; color: #3f3f46; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .lb-msg { font-size: 0.68rem; line-height: 1.4; padding: 6px 8px; border-radius: 6px; }
+  .lb-msg.ai { background: rgba(6,182,212,0.08); color: #22d3ee; border: 1px solid rgba(6,182,212,0.12); }
+  .lb-msg.user { background: rgba(255,255,255,0.04); color: #71717a; border: 1px solid rgba(255,255,255,0.06); }
+
+  /* LAYOUT C - Stacked: orb top, transcript below with glass */
+  .lc-body { height: 360px; display: flex; flex-direction: column; padding: 16px; gap: 10px; }
+  .lc-orb-row { display: flex; align-items: center; gap: 14px; }
+  .lc-orb {
+    width: 70px; height: 70px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 40% 35%, #22d3ee, #7c3aed, #0a0a0b);
+    box-shadow: 0 0 30px rgba(34,211,238,0.35), 0 0 60px rgba(124,58,237,0.2);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  .lc-info { flex: 1; }
+  .lc-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
+  .lc-status { font-size: 0.65rem; color: #52525b; margin-top: 2px; }
+  .lc-status span { color: #06b6d4; }
+  .lc-glass {
+    flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px;
+    overflow: hidden; backdrop-filter: blur(8px);
+  }
+  .lc-msg { font-size: 0.68rem; line-height: 1.4; }
+  .lc-msg.ai { color: #22d3ee; }
+  .lc-msg.user { color: #71717a; }
+
+  /* ===== ORB STATES ===== */
+  .states-section { padding: 0 24px 24px; }
+  .states-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+  .state-card {
+    flex: 1; min-width: 120px; background: #111113; border: 1px solid #27272a;
+    border-radius: 10px; padding: 16px; display: flex; flex-direction: column;
+    align-items: center; gap: 10px;
+  }
+  .state-name { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: #52525b; }
+
+  /* idle */
+  .orb-idle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #3f3f46, #1c1c1f);
+    box-shadow: 0 0 12px rgba(100,100,120,0.2);
+    animation: breathe-idle 4s ease-in-out infinite;
+  }
+  @keyframes breathe-idle { 0%,100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.04); opacity: 0.9; } }
+
+  /* connecting */
+  .orb-connecting {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #854d0e, #431407);
+    box-shadow: 0 0 20px rgba(251,191,36,0.25);
+    animation: spin-ring 1.5s linear infinite;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    position: relative;
+  }
+  .orb-connecting::after {
+    content: ''; position: absolute; inset: -3px; border-radius: 50%;
+    background: conic-gradient(from 0deg, #f59e0b, transparent 60%);
+    animation: spin-ring 1.2s linear infinite;
+    z-index: -1;
+    border-radius: 50%;
+  }
+
+  /* listening */
+  .orb-listening {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #22d3ee, #7c3aed, #0a0a0b);
+    box-shadow: 0 0 30px rgba(34,211,238,0.5), 0 0 60px rgba(124,58,237,0.25);
+    animation: pulse-listen 1s ease-in-out infinite;
+  }
+  @keyframes pulse-listen { 0%,100% { transform: scale(1); box-shadow: 0 0 30px rgba(34,211,238,0.5), 0 0 60px rgba(124,58,237,0.25); } 50% { transform: scale(1.1); box-shadow: 0 0 50px rgba(34,211,238,0.7), 0 0 80px rgba(124,58,237,0.4); } }
+
+  /* speaking */
+  .orb-speaking {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #a855f7, #06b6d4, #0a0a0b);
+    box-shadow: 0 0 40px rgba(168,85,247,0.5), 0 0 80px rgba(6,182,212,0.3);
+    animation: wave-speak 0.6s ease-in-out infinite alternate;
+  }
+  @keyframes wave-speak { 0% { transform: scale(1) scaleY(1); } 100% { transform: scale(1.08) scaleY(0.95); } }
+
+  /* processing */
+  .orb-processing {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #16a34a, #0d9488, #0a0a0b);
+    box-shadow: 0 0 30px rgba(22,163,74,0.4), 0 0 60px rgba(13,148,136,0.2);
+    animation: morph-proc 2s ease-in-out infinite;
+  }
+  @keyframes morph-proc { 0%,100% { border-radius: 50%; transform: rotate(0deg); } 33% { border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%; transform: rotate(60deg); } 66% { border-radius: 60% 40% 40% 60% / 40% 60% 40% 60%; transform: rotate(120deg); } }
+
+  /* page title */
+  .page-title { padding: 20px 24px 4px; font-size: 0.9rem; font-weight: 700; color: #fff; }
+  .page-sub { padding: 0 24px 16px; font-size: 0.7rem; color: #52525b; }
+  .divider { height: 1px; background: #1f1f23; margin: 0 24px 20px; }
+</style>
+</head>
+<body>
+
+<div class="page-title">Cerebrocal — Layout & Visual States</div>
+<div class="page-sub">Click a layout card to select it. Review orb states below.</div>
+<div class="divider"></div>
+
+<!-- LAYOUTS -->
+<h2 style="padding: 0 24px; margin-bottom: 4px;">Page Layout</h2>
+<div class="section-label" style="padding: 0 24px;">Which arrangement feels right?</div>
+<div class="layouts">
+
+  <!-- Layout A -->
+  <div class="layout-card" onclick="select(this,'layout-a')">
+    <div class="layout-header">
+      <strong>A — Full Bleed</strong>
+      <span class="badge">Immersive</span>
+    </div>
+    <div class="la-body">
+      <div class="la-hero">
+        <div class="la-orb"></div>
+        <div class="la-title">Cerebrocal</div>
+        <div class="la-sub">AI Scheduling Concierge</div>
+        <div class="la-btn">Initialize Session</div>
+      </div>
+      <div class="la-transcript">
+        <div class="msg ai">Hello! I'm here to help you schedule a meeting. What's your name?</div>
+        <div class="msg user">Hi, I'm Alex</div>
+        <div class="msg ai">Great to meet you, Alex! When would you like to meet?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout B -->
+  <div class="layout-card" onclick="select(this,'layout-b')">
+    <div class="layout-header">
+      <strong>B — Split Panel</strong>
+      <span class="badge">Structured</span>
+    </div>
+    <div class="lb-body">
+      <div class="lb-left">
+        <div class="lb-orb"></div>
+        <div style="text-align:center">
+          <div style="font-size:0.8rem;font-weight:600;color:#fff">Cerebrocal</div>
+          <div class="lb-label" style="margin-top:4px">Listening</div>
+        </div>
+        <div class="la-btn" style="font-size:0.65rem">End Session</div>
+      </div>
+      <div class="lb-right">
+        <div class="lb-right-title">Conversation</div>
+        <div class="lb-msg ai">Hello! I'm here to help you schedule a meeting.</div>
+        <div class="lb-msg user">Hi, I'm Alex</div>
+        <div class="lb-msg ai">Great to meet you, Alex! When would you like to meet?</div>
+        <div class="lb-msg user">Tomorrow at 3pm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout C -->
+  <div class="layout-card" onclick="select(this,'layout-c')">
+    <div class="layout-header">
+      <strong>C — Compact Header</strong>
+      <span class="badge">Minimal</span>
+    </div>
+    <div class="lc-body">
+      <div class="lc-orb-row">
+        <div class="lc-orb"></div>
+        <div class="lc-info">
+          <div class="lc-name">Cerebrocal</div>
+          <div class="lc-status"><span>Listening</span> · Session active</div>
+        </div>
+        <div class="la-btn" style="font-size:0.65rem;white-space:nowrap">End</div>
+      </div>
+      <div class="lc-glass">
+        <div class="lc-msg ai">Hello! I'm here to help you schedule a meeting.</div>
+        <div class="lc-msg user">Hi, I'm Alex</div>
+        <div class="lc-msg ai">Great to meet you! When would you like to meet?</div>
+        <div class="lc-msg user">Tomorrow at 3pm</div>
+        <div class="lc-msg ai">And what's the meeting about?</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- ORB STATES -->
+<div class="states-section">
+  <h2 style="margin-bottom: 4px;">Orb States</h2>
+  <div class="section-label">These are the 5 animation states for the AI Core</div>
+  <div class="states-grid">
+    <div class="state-card">
+      <div class="state-name">Idle</div>
+      <div class="orb-idle"></div>
+      <div style="font-size:0.65rem;color:#3f3f46;text-align:center">Dim, slow<br>breathing pulse</div>
+    </div>
+    <div class="state-card">
+      <div class="state-name">Connecting</div>
+      <div style="position:relative;width:56px;height:56px">
+        <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 40% 35%, #92400e, #1c0a03);box-shadow:0 0 20px rgba(251,191,36,0.2)"></div>
+        <div style="position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(from 0deg, #f59e0b 0%, #f59e0b 30%, transparent 60%);animation:spin-c 1s linear infinite;z-index:1"></div>
+        @keyframes spin-c { to { transform: rotate(360deg); } }
+      </div>
+      <div style="font-size:0.65rem;color:#3f3f46;text-align:center">Amber conic<br>spinner ring</div>
+    </div>
+    <div class="state-card">
+      <div class="state-name">Listening</div>
+      <div class="orb-listening"></div>
+      <div style="font-size:0.65rem;color:#3f3f46;text-align:center">Cyan/purple, fast<br>expand pulse</div>
+    </div>
+    <div class="state-card">
+      <div class="state-name">Speaking</div>
+      <div class="orb-speaking"></div>
+      <div style="font-size:0.65rem;color:#3f3f46;text-align:center">Purple/cyan shift,<br>amplitude-driven scale</div>
+    </div>
+    <div class="state-card">
+      <div class="state-name">Processing</div>
+      <div class="orb-processing"></div>
+      <div style="font-size:0.65rem;color:#3f3f46;text-align:center">Green morph,<br>blob animation</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const selections = {};
+  function select(el, key) {
+    // deselect siblings in same group
+    el.parentElement.querySelectorAll('.layout-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    selections[key] = true;
+    // fire event
+    if (window.__superRecord) window.__superRecord({type:'click', choice: key, text: el.querySelector('strong').textContent});
+  }
+</script>
+</body>
+</html>

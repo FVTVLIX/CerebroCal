@@ -1,0 +1,4 @@
+{"type":"server-started","port":64943,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:64943","screen_dir":"/Users/bbkrm./Desktop/codeprojects/cerebrocal/.superpowers/brainstorm/16960-1774049599"}
+{"type":"screen-added","file":"/Users/bbkrm./Desktop/codeprojects/cerebrocal/.superpowers/brainstorm/16960-1774049599/layout.html"}
+{"type":"screen-added","file":"/Users/bbkrm./Desktop/codeprojects/cerebrocal/.superpowers/brainstorm/16960-1774049599/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}
