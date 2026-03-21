@@ -21,6 +21,7 @@ export function useWebRTC(): UseWebRTCReturn {
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const dcRef = useRef<RTCDataChannel | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
   // Use a ref to avoid stale closure when connect is referenced inside retry callbacks
   const connectRef = useRef<() => Promise<void>>(() => Promise.resolve())
 
@@ -44,7 +45,13 @@ export function useWebRTC(): UseWebRTCReturn {
 
   const handleDataChannelMessage = useCallback(
     async (event: MessageEvent) => {
-      const msg = JSON.parse(event.data)
+      let msg: Record<string, unknown>
+      try {
+        msg = JSON.parse(event.data)
+      } catch {
+        console.warn('[useWebRTC] Failed to parse data channel message:', event.data)
+        return
+      }
 
       switch (msg.type) {
         case 'session.created': {
@@ -63,7 +70,7 @@ export function useWebRTC(): UseWebRTCReturn {
         }
 
         case 'conversation.item.input_audio_transcription.completed': {
-          if (msg.transcript) addMessage('user', msg.transcript)
+          if (msg.transcript) addMessage('user', msg.transcript as string)
           break
         }
 
@@ -74,8 +81,9 @@ export function useWebRTC(): UseWebRTCReturn {
 
         case 'response.output_item.done': {
           // Only handle message items — not function_call items
-          if (msg.item?.type !== 'message') break
-          const text = msg.item.content?.find(
+          const item = msg.item as { type: string; content?: { type: string; text?: string }[] } | undefined
+          if (item?.type !== 'message') break
+          const text = item.content?.find(
             (c: { type: string; text?: string }) => c.type === 'text'
           )?.text
           if (text) addMessage('ai', text)
@@ -87,17 +95,16 @@ export function useWebRTC(): UseWebRTCReturn {
           // msg.name = function name ("create_calendar_event")
           // msg.call_id = correlation ID
           // msg.arguments = JSON string with user's scheduling details
-          const args = JSON.parse(msg.arguments) as {
-            name: string
-            date: string
-            time: string
-            title?: string
-          }
-
           setStatus('processing')
 
           let calendarResult: object
           try {
+            const args = JSON.parse(msg.arguments as string) as {
+              name: string
+              date: string
+              time: string
+              title?: string
+            }
             const res = await fetch('/api/calendar', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -179,6 +186,7 @@ export function useWebRTC(): UseWebRTCReturn {
     let micStream: MediaStream
     try {
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      micStreamRef.current = micStream
     } catch {
       setStatus('idle')
       setError({ code: 'mic_denied', message: 'Microphone access required' })
@@ -197,6 +205,7 @@ export function useWebRTC(): UseWebRTCReturn {
     }
 
     pc.ontrack = (event) => {
+      if (pcRef.current !== pc) return  // stale instance
       const stream = event.streams[0]
       if (audioRef.current) audioRef.current.srcObject = stream
       setRemoteStream(stream)
@@ -212,6 +221,7 @@ export function useWebRTC(): UseWebRTCReturn {
 
     // ICE failure handling
     pc.oniceconnectionstatechange = () => {
+      if (pcRef.current !== pc) return  // stale instance
       if (pc.iceConnectionState === 'failed') {
         setStatus('idle')
         setRemoteStream(null)
@@ -224,26 +234,44 @@ export function useWebRTC(): UseWebRTCReturn {
     }
 
     // 4. SDP offer/answer
-    const offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
+    try {
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
 
-    const sdpRes = await fetch(
-      `https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/sdp',
-        },
-        body: pc.localDescription!.sdp,
-      }
-    )
+      const sdpRes = await fetch(
+        `https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/sdp',
+          },
+          body: pc.localDescription!.sdp,
+        }
+      )
 
-    const answerSdp = await sdpRes.text()
-    await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
+      const answerSdp = await sdpRes.text()
+      await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
+    } catch {
+      pc.close()
+      pcRef.current = null
+      setStatus('idle')
+      setError({
+        code: 'token_fetch_failed',
+        message: "Couldn't connect to AI — check your API key",
+        retry: () => connectRef.current(),
+      })
+    }
   }, [handleDataChannelMessage])
 
   const disconnect = useCallback(() => {
+    micStreamRef.current?.getTracks().forEach((track) => track.stop())
+    micStreamRef.current = null
+    if (audioRef.current) {
+      audioRef.current.srcObject = null
+      audioRef.current.remove()
+      audioRef.current = null
+    }
     dcRef.current?.close()
     pcRef.current?.close()
     pcRef.current = null
