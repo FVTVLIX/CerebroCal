@@ -253,6 +253,8 @@ export function useWebRTC(): UseWebRTCReturn {
       const answerSdp = await sdpRes.text()
       await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
     } catch {
+      micStreamRef.current?.getTracks().forEach((t) => t.stop())
+      micStreamRef.current = null
       pc.close()
       pcRef.current = null
       setStatus('idle')
