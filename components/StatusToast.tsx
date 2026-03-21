@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { AppError } from '@/lib/types'
@@ -11,11 +11,14 @@ interface StatusToastProps {
 }
 
 export function StatusToast({ error, onDismiss }: StatusToastProps) {
+  const onDismissRef = useRef(onDismiss)
+  useEffect(() => { onDismissRef.current = onDismiss })
+
   useEffect(() => {
     if (!error) return
-    const timer = setTimeout(onDismiss, 5000)
+    const timer = setTimeout(() => onDismissRef.current(), 5000)
     return () => clearTimeout(timer)
-  }, [error, onDismiss])
+  }, [error])
 
   return (
     <AnimatePresence>
@@ -27,7 +30,7 @@ export function StatusToast({ error, onDismiss }: StatusToastProps) {
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
         >
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl max-w-sm">
+          <div role="alert" className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl max-w-sm">
             <p className="text-sm text-zinc-300 flex-1">{error.message}</p>
 
             {error.retry && (
