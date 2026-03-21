@@ -33,7 +33,7 @@ Token refresh is handled transparently in the NextAuth JWT callback: if the acce
 | `auth.ts` | Create | NextAuth v5 config — Google-only, calendar scope, JWT token storage + refresh |
 | `types/next-auth.d.ts` | Create | TypeScript session/JWT type augmentation for `access_token` and `error` fields |
 | `app/api/auth/[...nextauth]/route.ts` | Create | NextAuth route handler — exports `GET` and `POST` from `handlers` |
-| `middleware.ts` | Create | Edge middleware — redirects unauthenticated or token-errored requests to `/signin` |
+| `proxy.ts` | Create | Next.js 16 Proxy (formerly Middleware) — redirects unauthenticated or token-errored requests to `/signin` |
 | `app/providers.tsx` | Create | `'use client'` wrapper — renders `SessionProvider` for client session access |
 | `app/signin/page.tsx` | Create | Async server component sign-in page — single "Continue with Google" button |
 | `app/signin/SignInButton.tsx` | Create | `'use client'` — calls `signIn('google', { redirectTo: '/' })` |
@@ -55,7 +55,7 @@ Token refresh is handled transparently in the NextAuth JWT callback: if the acce
 - **Tokens stored in JWT:** `access_token`, `refresh_token`, `expires_at`
 - **Token refresh:** Handled in the NextAuth `jwt` callback — transparent to callers
 - **CSRF protection:** NextAuth built-in double-submit cookie pattern
-- **Secret:** `NEXTAUTH_SECRET` — app will not start if missing
+- **Secret:** `AUTH_SECRET` (or `NEXTAUTH_SECRET`) — app will not start if missing
 
 ---
 
@@ -144,7 +144,7 @@ import { DefaultSession } from 'next-auth'
 
 declare module 'next-auth' {
   interface Session extends DefaultSession {
-    access_token: string
+    access_token?: string
     error?: string
   }
 }
@@ -168,9 +168,11 @@ import { handlers } from '@/auth'
 export const { GET, POST } = handlers
 ```
 
-### `middleware.ts` (project root)
+### `proxy.ts` (project root)
 
-Redirects unauthenticated requests to `/signin`. Also redirects if the session has a `RefreshTokenError` — this forces re-authentication when the refresh token is revoked or expired.
+> **Next.js 16 note:** Middleware is now called Proxy. The file must be named `proxy.ts`. The function can be a default export or named `proxy` export. The proxy defaults to the Node.js runtime — the edge runtime config option is not available.
+
+Redirects unauthenticated requests to `/signin`. Also redirects if the session carries a `RefreshTokenError` — forcing re-authentication when the refresh token is revoked or expired. Returns `NextResponse.next()` explicitly for all allowed requests.
 
 ```ts
 import { auth } from './auth'
@@ -185,6 +187,8 @@ export default auth((req) => {
   if ((!isAuthed || hasTokenError) && !isAuthRoute && !isSignIn) {
     return NextResponse.redirect(new URL('/signin', req.url))
   }
+
+  return NextResponse.next()
 })
 
 export const config = {
@@ -306,17 +310,21 @@ export async function createCalendarEvent({
   const startUtc = fromZonedTime(`${date}T${time}:00`, timezone ?? 'UTC')
   const endUtc = new Date(startUtc.getTime() + 30 * 60 * 1000)
 
-  const event = await calendar.events.insert({
+  const res = await calendar.events.insert({
     calendarId: 'primary',
     requestBody: {
       summary: title ?? `Meeting with ${name}`,
       description: `Scheduled via Cerebrocal for ${name}`,
-      start: { dateTime: startUtc.toISOString() },
-      end: { dateTime: endUtc.toISOString() },
+      start: { dateTime: startUtc.toISOString(), timeZone: timezone ?? 'UTC' },
+      end: { dateTime: endUtc.toISOString(), timeZone: timezone ?? 'UTC' },
     },
   })
 
-  return { success: true, eventId: event.data.id }
+  return {
+    success: true,
+    eventId: res.data.id!,
+    htmlLink: res.data.htmlLink!,
+  }
 }
 ```
 
@@ -378,7 +386,7 @@ User revokes app access in Google Account settings
 | OAuth error / user denies consent | Redirect to `/signin?error=OAuthCallback` → generic error shown |
 | Access token expired | JWT callback refreshes transparently — user unaffected |
 | Refresh token revoked | Middleware detects `RefreshTokenError` → redirect to `/signin` |
-| `NEXTAUTH_SECRET` missing | App does not start |
+| `AUTH_SECRET` missing | App does not start |
 | Calendar insert fails | `500 { error: 'insert_failed' }` — AI informs user verbally |
 
 ---
@@ -387,7 +395,7 @@ User revokes app access in Google Account settings
 
 | Variable | Description |
 |---|---|
-| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
+| `AUTH_SECRET` | `openssl rand -base64 32` — NextAuth v5 canonical name; `NEXTAUTH_SECRET` is also accepted as an alias |
 | `AUTH_URL` | Full deployment URL, e.g. `https://cerebrocal.vercel.app` (v5 canonical; `NEXTAUTH_URL` also accepted) |
 | `GOOGLE_CLIENT_ID` | Google OAuth 2.0 Client ID — used for both sign-in and Calendar API |
 | `GOOGLE_CLIENT_SECRET` | Same |
