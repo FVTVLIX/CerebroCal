@@ -14,6 +14,8 @@ Add secure authentication to Cerebrocal so that only signed-in users can access 
 
 NextAuth.js v5 (Auth.js) with Google and GitHub OAuth providers. JWT sessions stored in signed, httpOnly cookies. No database required. Next.js edge middleware enforces authentication at the routing layer; API routes add a server-side `auth()` check as defense in depth.
 
+**Package installation required:** `npm install next-auth@beta`
+
 ---
 
 ## Architecture
@@ -23,11 +25,13 @@ NextAuth.js v5 (Auth.js) with Google and GitHub OAuth providers. JWT sessions st
 | File | Action | Responsibility |
 |------|--------|---------------|
 | `auth.ts` | Create | NextAuth v5 config — Google + GitHub providers, JWT strategy |
+| `app/api/auth/[...nextauth]/route.ts` | Create | NextAuth route handler — exports `GET` and `POST` from `handlers` |
 | `middleware.ts` | Create | Edge middleware — redirects unauthenticated requests to `/signin` |
+| `app/providers.tsx` | Create | `'use client'` wrapper — renders `SessionProvider` for client session access |
 | `app/signin/page.tsx` | Create | Server component sign-in page — Google + GitHub buttons, error display |
 | `app/signin/SignInButtons.tsx` | Create | `'use client'` — interactive sign-in buttons calling `signIn()` |
-| `app/layout.tsx` | Modify | Wrap with `SessionProvider` for client-side session access |
-| `app/page.tsx` | Modify | Add sign-out button to right panel header |
+| `app/layout.tsx` | Modify | Import and render `Providers` wrapper around children |
+| `app/page.tsx` | Modify | Add `SignOutButton` client component to right panel header |
 | `app/api/session/route.ts` | Modify | Add `auth()` guard — return 401 if no session |
 | `app/api/calendar/route.ts` | Modify | Add `auth()` guard — return 401 if no session |
 | `.env.example` | Modify | Add NextAuth env vars with documentation |
@@ -107,23 +111,53 @@ Displays a generic "Sign-in failed — please try again" message when `?error=` 
 
 Both buttons match the existing Cerebrocal button style (rounded-full, glass border, dark background).
 
+### `app/api/auth/[...nextauth]/route.ts` (new)
+
+Required by NextAuth v5. The catch-all route handler that receives all OAuth callbacks, sign-in/sign-out requests, and CSRF token requests. Without this file, all `/api/auth/*` URLs 404.
+
+```ts
+import { handlers } from '@/auth'
+export const { GET, POST } = handlers
+```
+
+### `app/providers.tsx` (new)
+
+A thin `'use client'` wrapper that renders `SessionProvider` from `next-auth/react`. Required because `app/layout.tsx` is a Server Component and exports `metadata` — adding `SessionProvider` directly would force the entire layout client-side and break `metadata` exports.
+
+```tsx
+'use client'
+import { SessionProvider } from 'next-auth/react'
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return <SessionProvider>{children}</SessionProvider>
+}
+```
+
 ### `app/layout.tsx` (modified)
 
-Wrap children with `SessionProvider` from `next-auth/react` so client components can access session state (needed for sign-out in the page header).
+Import `Providers` and wrap `{children}` with it. No other changes — layout remains a Server Component.
 
 ### `app/page.tsx` (modified)
 
-Add a sign-out control to the right panel header. A small "Sign out" button (or link) next to the "Conversation" label. Calls `signOut({ redirectTo: '/signin' })` as a server action. Visible only when a session exists.
-
-Because `page.tsx` is `'use client'`, the sign-out will be triggered via a `<form action={...}>` server action pattern or a small `SignOutButton` client component that calls the imported `signOut` action.
+`page.tsx` is already `'use client'` (uses `useWebRTC`, `useAudioAnalyzer`). Add a `SignOutButton` — a small client component that calls `signOut({ redirectTo: '/signin' })` from `next-auth/react`. Rendered in the right panel header next to "Conversation", visible at all times (user is always signed in if they reach this page).
 
 ### API Route Guards
 
-Both `/api/session/route.ts` and `/api/calendar/route.ts` get the same guard added at the top of their `POST` handler:
+Both API routes get an `auth()` guard added at the top of their `POST` handler. Note: `/api/session/route.ts` currently takes no `req` parameter — that signature is preserved.
 
 ```ts
 import { auth } from '@/auth'
 
+// In /api/session/route.ts (no req parameter):
+export async function POST() {
+  const session = await auth()
+  if (!session) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+  // existing logic continues...
+}
+
+// In /api/calendar/route.ts (req: NextRequest preserved):
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session) {
@@ -203,7 +237,7 @@ Added to `.env.example` and documented in `SETUP.md`:
 | Variable | Description |
 |---|---|
 | `NEXTAUTH_SECRET` | Random 32-byte secret: `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Full deployment URL, e.g. `https://cerebrocal.vercel.app` |
+| `AUTH_URL` | Full deployment URL, e.g. `https://cerebrocal.vercel.app` (NextAuth v5 uses `AUTH_URL`; `NEXTAUTH_URL` is also accepted but `AUTH_URL` is the v5 canonical name) |
 | `GOOGLE_CLIENT_ID` | Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client ID |
 | `GOOGLE_CLIENT_SECRET` | Same |
 | `GITHUB_CLIENT_ID` | GitHub → Settings → Developer settings → OAuth Apps → New OAuth App |
