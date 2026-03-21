@@ -37,13 +37,17 @@ Stringify the JSON key to a single line:
 python3 -c "import json,sys; print(json.dumps(json.load(sys.stdin)))" < service-account.json
 ```
 
-Copy the output. Then:
+Copy the output. After copying the output, delete or securely store the downloaded JSON key file — do not commit it to your repository.
+
+Then:
 
 **For local development** — add to `.env.local`:
 ```
 GOOGLE_SERVICE_ACCOUNT_JSON=<paste stringified output here>
 GOOGLE_CALENDAR_ID=primary
 ```
+
+**Note:** `primary` refers to the service account's own calendar, which is separate from your personal Google Calendar. If you want events to appear on your personal calendar, see section 5 and share your calendar with the service account first.
 
 **For Vercel** — go to your project → Settings → Environment Variables:
 - `GOOGLE_SERVICE_ACCOUNT_JSON` = paste stringified output
