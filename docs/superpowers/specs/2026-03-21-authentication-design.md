@@ -335,7 +335,7 @@ export async function createCalendarEvent({
 ### First Visit (unauthenticated)
 
 ```
-GET / → middleware.ts
+GET / → proxy.ts
   → req.auth is null
   → redirect to /signin
   → user clicks "Continue with Google"
@@ -343,7 +343,7 @@ GET / → middleware.ts
   → user approves → Google callback to /api/auth/callback/google
   → NextAuth stores access_token + refresh_token in JWT session cookie
   → redirect to /
-  → middleware.ts → req.auth is valid → allow
+  → proxy.ts → req.auth is valid → allow
 ```
 
 ### AI Books a Meeting
