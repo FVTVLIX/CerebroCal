@@ -42,3 +42,17 @@ next-env.d.ts
 
 # claude tooling
 .claude/
+
+# Env secrets
+.env.local
+.env.*.local
+
+# Brainstorm mockups
+.superpowers/
+
+# Google service account key (if accidentally downloaded here)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!jest.config.ts
