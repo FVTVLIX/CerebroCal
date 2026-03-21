@@ -47,7 +47,6 @@ body::after {
 }
 
 /* Content sits above overlays */
-#__next,
 main {
   position: relative;
   z-index: 2;
