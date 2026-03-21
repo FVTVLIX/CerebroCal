@@ -95,7 +95,7 @@ export function AiCore({ status, amplitude }: AiCoreProps) {
         className={`w-36 h-36 rounded-full ${gradientClass[status]}`}
         animate={
           speakingScale !== undefined
-            ? { scale: speakingScale, ...orbVariants[status] }
+            ? { ...orbVariants[status], scale: speakingScale }
             : orbVariants[status]
         }
         transition={orbTransitions[status]}

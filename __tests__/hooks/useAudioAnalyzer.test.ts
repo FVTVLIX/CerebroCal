@@ -63,7 +63,7 @@ describe('useAudioAnalyzer', () => {
     const stream = makeStream()
     const { rerender } = renderHook(
       ({ s }: { s: MediaStream | null }) => useAudioAnalyzer(s),
-      { initialProps: { s: stream } }
+      { initialProps: { s: stream as MediaStream | null } }
     )
 
     rerender({ s: null })
