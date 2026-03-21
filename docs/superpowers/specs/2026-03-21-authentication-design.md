@@ -99,9 +99,20 @@ export const config = {
 
 ### `app/signin/page.tsx`
 
-Server component. Reads `searchParams.error` to show error messages. Renders `SignInButtons` for client interactivity. Matches Cerebrocal's dark aesthetic — centered card with app name and two provider buttons.
+Async server component. `searchParams` is a `Promise` in Next.js 15+ and must be awaited before accessing properties. The page destructures `error` from the resolved value.
 
-Displays a generic "Sign-in failed — please try again" message when `?error=` is present. Does not expose raw NextAuth error codes to users.
+```ts
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
+  // render sign-in card; show generic error if !!error
+}
+```
+
+Renders `SignInButtons` for client interactivity. Matches Cerebrocal's dark aesthetic — centered card with app name and two provider buttons. Displays a generic "Sign-in failed — please try again" message when `error` is present. Does not expose raw NextAuth error codes to users.
 
 ### `app/signin/SignInButtons.tsx`
 
