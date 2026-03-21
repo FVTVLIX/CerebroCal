@@ -70,7 +70,7 @@ When prompted about existing files (README, git), choose to overwrite/keep as ne
 - [ ] **Step 2: Install runtime dependencies**
 
 ```bash
-npm install framer-motion clsx tailwind-merge lucide-react googleapis date-fns date-fns-tz
+npm install framer-motion clsx tailwind-merge lucide-react googleapis date-fns date-fns-tz geist
 ```
 
 - [ ] **Step 3: Install dev dependencies for testing**
