@@ -81,11 +81,13 @@ export function useWebRTC(): UseWebRTCReturn {
 
         case 'response.output_item.done': {
           // Only handle message items — not function_call items
-          const item = msg.item as { type: string; content?: { type: string; text?: string }[] } | undefined
+          const item = msg.item as { type: string; content?: { type: string; text?: string; transcript?: string }[] } | undefined
           if (item?.type !== 'message') break
-          const text = item.content?.find(
-            (c: { type: string; text?: string }) => c.type === 'text'
-          )?.text
+          const contentItem = item.content?.find(
+            (c: { type: string; text?: string; transcript?: string }) =>
+              c.type === 'text' || c.type === 'audio_transcript'
+          )
+          const text = contentItem?.text ?? contentItem?.transcript
           if (text) addMessage('ai', text)
           setStatus('listening')
           break
@@ -255,6 +257,11 @@ export function useWebRTC(): UseWebRTCReturn {
     } catch {
       micStreamRef.current?.getTracks().forEach((t) => t.stop())
       micStreamRef.current = null
+      if (audioRef.current) {
+        audioRef.current.srcObject = null
+        audioRef.current.remove()
+        audioRef.current = null
+      }
       pc.close()
       pcRef.current = null
       setStatus('idle')

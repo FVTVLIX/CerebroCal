@@ -24,7 +24,12 @@ export async function createCalendarEvent(
     throw new Error('calendar_not_configured')
   }
 
-  const key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+  let key: { client_email: string; private_key: string }
+  try {
+    key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+  } catch {
+    throw new Error('calendar_not_configured: invalid service account JSON')
+  }
 
   const auth = new google.auth.JWT({
     email: key.client_email,
