@@ -8,7 +8,7 @@ export default async function LandingPage({
 }: {
   searchParams?: Promise<{ error?: string }>
 }) {
-  const { error } = await (searchParams ?? Promise.resolve({}))
+  const { error } = await (searchParams ?? Promise.resolve({} as { error?: string }))
 
   return (
     <>
