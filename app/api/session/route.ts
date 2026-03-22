@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server'
+import { auth } from '@/auth'
 import { createOpenAISession } from './logic'
 
 export async function POST() {
+  const session = await auth()
+  if (!session) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
   try {
     const token = await createOpenAISession()
     return NextResponse.json({ token })
