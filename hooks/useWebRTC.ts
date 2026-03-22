@@ -25,7 +25,7 @@ export function useWebRTC(): UseWebRTCReturn {
   // Use a ref to avoid stale closure when connect is referenced inside retry callbacks
   const connectRef = useRef<() => Promise<void>>(() => Promise.resolve())
 
-  const addMessage = useCallback((role: 'user' | 'ai', content: string) => {
+  const addMessage = useCallback((role: 'user' | 'ai' | 'system', content: string) => {
     setTranscript((prev) => [
       ...prev,
       { id: crypto.randomUUID(), role, content, timestamp: Date.now() },
@@ -85,7 +85,7 @@ export function useWebRTC(): UseWebRTCReturn {
           if (item?.type !== 'message') break
           const contentItem = item.content?.find(
             (c: { type: string; text?: string; transcript?: string }) =>
-              c.type === 'text' || c.type === 'audio_transcript'
+              c.type === 'text' || c.type === 'audio'
           )
           const text = contentItem?.text ?? contentItem?.transcript
           if (text) addMessage('ai', text)

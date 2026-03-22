@@ -7,7 +7,7 @@ export type SessionStatus =
 
 export interface TranscriptMessage {
   id: string       // crypto.randomUUID()
-  role: 'user' | 'ai'
+  role: 'user' | 'ai' | 'system'
   content: string
   timestamp: number // Date.now()
 }
