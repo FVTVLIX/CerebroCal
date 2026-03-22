@@ -5,8 +5,6 @@ export default auth((req) => {
   const isAuthed = !!req.auth
   const hasTokenError = req.auth?.error === 'RefreshTokenError'
   const pathname = req.nextUrl.pathname
-  const isAuthRoute = pathname.startsWith('/api/auth')
-  const isSignIn = pathname === '/signin'
   const isLanding = pathname === '/'
   const isChat = pathname.startsWith('/chat')
 
