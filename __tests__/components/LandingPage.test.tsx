@@ -47,9 +47,9 @@ describe('LandingPage', () => {
 
   it('renders all three How It Works steps', () => {
     render(<LandingPage />)
-    expect(screen.getAllByText(/sign in with google/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/talk naturally/i)).toBeInTheDocument()
-    expect(screen.getByText(/event booked instantly/i)).toBeInTheDocument()
+    expect(screen.getByText(/grant calendar access once/i)).toBeInTheDocument()
+    expect(screen.getByText(/no forms, no typing/i)).toBeInTheDocument()
+    expect(screen.getByText(/hear confirmation the moment it lands on your calendar/i)).toBeInTheDocument()
   })
 
   it('renders the sample conversation section', () => {
