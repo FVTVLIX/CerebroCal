@@ -4,6 +4,7 @@
 **Feature:** Public landing page at `/`, chat interface moved to `/chat`
 **Status:** Approved for implementation
 **Depends on:** `2026-03-21-authentication-design.md` (implement together)
+**Install required:** `npm install next-auth@beta` (from auth spec — must be done before any imports compile)
 
 ---
 
@@ -32,7 +33,8 @@ Add a public-facing landing page at `/` that introduces Cerebrocal and lets user
 |------|--------|---------------|
 | `app/page.tsx` | Replace | Landing page — server component, dark aesthetic, four sections |
 | `app/chat/page.tsx` | Create | Chat interface — move existing `app/page.tsx` content here |
-| `app/landing/HeroSignInButton.tsx` | Create | `'use client'` — calls `signIn('google', { redirectTo: '/chat' })` |
+| `components/landing/HeroSignInButton.tsx` | Create | `'use client'` — calls `signIn('google', { redirectTo: '/chat' })` |
+| `app/signin/SignInButton.tsx` | Modify | Update `redirectTo` from `'/'` to `'/chat'` — avoids double-redirect via landing page |
 | `proxy.ts` | Modify | Protect `/chat` instead of `/`; redirect authenticated users from `/` to `/chat` |
 
 ### What moves
@@ -86,7 +88,7 @@ Single row, `border-t border-white/5`, small text.
 
 ---
 
-### `app/landing/HeroSignInButton.tsx`
+### `components/landing/HeroSignInButton.tsx`
 
 `'use client'` component. Calls `signIn('google', { redirectTo: '/chat' })` on click.
 
@@ -155,6 +157,8 @@ export const config = {
 ```
 
 Note: unauthenticated users who reach `/chat` are redirected to `/` (the landing page) rather than `/signin`, since the landing page IS the sign-in entry point.
+
+Note: authenticated users who visit `/signin` directly are NOT redirected — `/signin` is intentionally left as a public error-fallback page. An authenticated user landing there (e.g. from a bookmarked error URL) will see the sign-in page but can navigate to `/chat` manually. This is acceptable given `/signin` is only reached via OAuth error redirects in normal usage.
 
 ---
 
