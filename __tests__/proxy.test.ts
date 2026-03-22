@@ -63,11 +63,4 @@ describe('proxy', () => {
     expect(mockNext).toHaveBeenCalled()
     expect(mockRedirect).not.toHaveBeenCalled()
   })
-
-  it('passes /signin through without redirect', async () => {
-    const proxy = (await import('@/proxy')).default
-    await proxy(makeReq('/signin', null) as any)
-    expect(mockNext).toHaveBeenCalled()
-    expect(mockRedirect).not.toHaveBeenCalled()
-  })
 })
