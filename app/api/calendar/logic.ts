@@ -7,6 +7,7 @@ interface CalendarEventInput {
   time: string        // HH:MM 24h
   title?: string
   timezone?: string   // IANA, e.g. "America/Chicago"
+  accessToken: string
 }
 
 interface CalendarEventResult {
@@ -18,35 +19,23 @@ interface CalendarEventResult {
 export async function createCalendarEvent(
   input: CalendarEventInput
 ): Promise<CalendarEventResult> {
-  const { name, date, time, title, timezone = 'UTC' } = input
+  const { name, date, time, title, timezone = 'UTC', accessToken } = input
 
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-    throw new Error('calendar_not_configured')
-  }
+  const oAuth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+  )
+  oAuth2Client.setCredentials({ access_token: accessToken })
 
-  let key: { client_email: string; private_key: string }
-  try {
-    key = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
-  } catch {
-    throw new Error('calendar_not_configured: invalid service account JSON')
-  }
-
-  const auth = new google.auth.JWT({
-    email: key.client_email,
-    key: key.private_key,
-    scopes: ['https://www.googleapis.com/auth/calendar'],
-  })
+  const calendar = google.calendar({ version: 'v3', auth: oAuth2Client })
 
   // Pass bare local-time string — do NOT wrap in new Date() first
   // (that would parse as UTC on Vercel, compounding the offset)
   const startUtc = fromZonedTime(`${date}T${time}:00`, timezone)
   const endUtc = new Date(startUtc.getTime() + 30 * 60 * 1000)
 
-  const calendar = google.calendar({ version: 'v3', auth })
-  const calendarId = process.env.GOOGLE_CALENDAR_ID ?? 'primary'
-
   const res = await calendar.events.insert({
-    calendarId,
+    calendarId: 'primary',
     requestBody: {
       summary: title ?? `Meeting with ${name}`,
       description: `Scheduled via Cerebrocal for ${name}`,

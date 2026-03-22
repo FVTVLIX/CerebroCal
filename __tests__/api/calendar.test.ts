@@ -1,39 +1,58 @@
+// @jest-environment node
 // Mock googleapis before importing logic
 jest.mock('googleapis', () => {
   const mockInsert = jest.fn()
+  const mockSetCredentials = jest.fn()
+  const mockOAuth2Instance = { setCredentials: mockSetCredentials }
   return {
     google: {
       auth: {
-        JWT: jest.fn().mockImplementation(() => ({ authorize: jest.fn() })),
+        OAuth2: jest.fn().mockImplementation(() => mockOAuth2Instance),
       },
       calendar: jest.fn().mockReturnValue({
         events: { insert: mockInsert },
       }),
     },
     __mockInsert: mockInsert,
+    __mockSetCredentials: mockSetCredentials,
   }
 })
 
-const { __mockInsert } = jest.requireMock('googleapis') as {
+const { __mockInsert, __mockSetCredentials } = jest.requireMock('googleapis') as {
   __mockInsert: jest.Mock
+  __mockSetCredentials: jest.Mock
 }
 
 beforeEach(() => {
   __mockInsert.mockReset()
-  process.env.GOOGLE_SERVICE_ACCOUNT_JSON = JSON.stringify({
-    type: 'service_account',
-    client_email: 'test@test.iam.gserviceaccount.com',
-    private_key: '-----BEGIN PRIVATE KEY-----\nfake\n-----END PRIVATE KEY-----\n',
-  })
-  process.env.GOOGLE_CALENDAR_ID = 'primary'
+  __mockSetCredentials.mockReset()
+  process.env.GOOGLE_CLIENT_ID = 'test-client-id'
+  process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret'
 })
 
 afterEach(() => {
-  delete process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-  delete process.env.GOOGLE_CALENDAR_ID
+  delete process.env.GOOGLE_CLIENT_ID
+  delete process.env.GOOGLE_CLIENT_SECRET
 })
 
 describe('createCalendarEvent', () => {
+  it('sets credentials with the provided accessToken', async () => {
+    __mockInsert.mockResolvedValueOnce({
+      data: { id: 'evt_123', htmlLink: 'https://calendar.google.com/evt_123' },
+    })
+
+    const { createCalendarEvent } = await import('@/app/api/calendar/logic')
+    await createCalendarEvent({
+      name: 'Alice',
+      date: '2026-06-15',
+      time: '14:00',
+      timezone: 'America/Chicago',
+      accessToken: 'ya29.test-token',
+    })
+
+    expect(__mockSetCredentials).toHaveBeenCalledWith({ access_token: 'ya29.test-token' })
+  })
+
   it('inserts a 30-minute event and returns success', async () => {
     __mockInsert.mockResolvedValueOnce({
       data: { id: 'evt_123', htmlLink: 'https://calendar.google.com/evt_123' },
@@ -45,12 +64,14 @@ describe('createCalendarEvent', () => {
       date: '2026-06-15',
       time: '14:00',
       timezone: 'America/Chicago',
+      accessToken: 'ya29.test-token',
     })
 
     expect(result.success).toBe(true)
     expect(result.eventId).toBe('evt_123')
     expect(__mockInsert).toHaveBeenCalledWith(
       expect.objectContaining({
+        calendarId: 'primary',
         requestBody: expect.objectContaining({
           summary: 'Meeting with Alice',
           description: 'Scheduled via Cerebrocal for Alice',
@@ -71,6 +92,7 @@ describe('createCalendarEvent', () => {
       time: '10:00',
       title: 'Product Review',
       timezone: 'UTC',
+      accessToken: 'ya29.test-token',
     })
 
     expect(__mockInsert).toHaveBeenCalledWith(
@@ -78,13 +100,5 @@ describe('createCalendarEvent', () => {
         requestBody: expect.objectContaining({ summary: 'Product Review' }),
       })
     )
-  })
-
-  it('throws calendar_not_configured when env var is missing', async () => {
-    delete process.env.GOOGLE_SERVICE_ACCOUNT_JSON
-    const { createCalendarEvent } = await import('@/app/api/calendar/logic')
-    await expect(
-      createCalendarEvent({ name: 'X', date: '2026-01-01', time: '09:00' })
-    ).rejects.toThrow('calendar_not_configured')
   })
 })
