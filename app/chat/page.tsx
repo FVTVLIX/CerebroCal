@@ -8,6 +8,7 @@ import { StatusToast } from '@/components/StatusToast'
 import { useWebRTC } from '@/hooks/useWebRTC'
 import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer'
 import { AppError } from '@/lib/types'
+import { SignOutButton } from '@/components/SignOutButton'
 
 export default function Home() {
   const { status, transcript, error: rtcError, remoteStream, connect, disconnect } = useWebRTC()
@@ -110,6 +111,7 @@ export default function Home() {
               <span className="text-xs text-zinc-500">Live</span>
             </motion.span>
           )}
+          <SignOutButton />
         </div>
 
         {/* Transcript */}
