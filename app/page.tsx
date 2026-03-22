@@ -1,125 +1,79 @@
-'use client'
+import { HeroSignInButton } from '@/components/landing/HeroSignInButton'
 
-import { useCallback, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
-import { AiCore } from '@/components/AiCore'
-import { TranscriptPanel } from '@/components/TranscriptPanel'
-import { StatusToast } from '@/components/StatusToast'
-import { useWebRTC } from '@/hooks/useWebRTC'
-import { useAudioAnalyzer } from '@/hooks/useAudioAnalyzer'
-import { AppError } from '@/lib/types'
+const USE_CASES = [
+  {
+    icon: '🗓',
+    title: 'Schedule a meeting',
+    description: 'Tell the AI who, when, and why — done.',
+  },
+  {
+    icon: '🔍',
+    title: 'Find a free slot',
+    description: "Just ask and it'll suggest the next available time.",
+  },
+  {
+    icon: '📋',
+    title: 'Add full details',
+    description: 'Title, time, attendee — all captured by voice.',
+  },
+  {
+    icon: '✅',
+    title: 'Confirm instantly',
+    description: "Hear confirmation the moment it's booked.",
+  },
+]
 
-export default function Home() {
-  const { status, transcript, error: rtcError, remoteStream, connect, disconnect } = useWebRTC()
-  const { amplitude } = useAudioAnalyzer(status === 'speaking' ? remoteStream : null)
-  const [dismissedError, setDismissedError] = useState<AppError | null>(null)
-
-  const isActive = status !== 'idle'
-  const visibleError = rtcError !== dismissedError ? rtcError : null
-
-  const handleDismiss = useCallback(() => {
-    setDismissedError(rtcError)
-  }, [rtcError])
-
-  const handleSessionToggle = useCallback(() => {
-    if (isActive) {
-      disconnect()
-    } else {
-      connect()
-    }
-  }, [isActive, connect, disconnect])
-
-  const statusLabel: Record<typeof status, string> = {
-    idle: 'Ready',
-    connecting: 'Connecting…',
-    listening: 'Listening',
-    speaking: 'Speaking',
-    processing: 'Booking…',
-  }
-
+export default function LandingPage() {
   return (
-    <main className="flex h-screen overflow-hidden">
-      {/* LEFT PANEL — AI Core */}
-      <div className="w-80 shrink-0 flex flex-col items-center justify-center gap-6 border-r border-white/5 px-6">
-        {/* App name */}
-        <div className="text-center">
-          <h1
-            className="text-2xl font-bold tracking-tight text-white"
-            style={{ fontFamily: 'var(--font-space-grotesk)' }}
-          >
-            Cerebrocal
-          </h1>
-          <p className="text-xs text-zinc-500 mt-1">AI Scheduling Concierge</p>
-        </div>
-
-        {/* Orb */}
-        <AiCore status={status} amplitude={amplitude} />
-
-        {/* Status label */}
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={status}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2 }}
-            className={`text-xs font-medium tracking-widest uppercase ${
-              status === 'listening'
-                ? 'text-cyan-400'
-                : status === 'speaking'
-                ? 'text-purple-400'
-                : status === 'processing'
-                ? 'text-green-400'
-                : status === 'connecting'
-                ? 'text-amber-400'
-                : 'text-zinc-600'
-            }`}
-          >
-            {statusLabel[status]}
-          </motion.p>
-        </AnimatePresence>
-
-        {/* Session button */}
-        <motion.button
-          onClick={handleSessionToggle}
-          disabled={status === 'connecting' || status === 'processing'}
-          whileTap={{ scale: 0.96 }}
-          className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all
-            ${isActive
-              ? 'bg-white/5 border border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
-              : 'bg-white/8 border border-white/12 text-white hover:bg-white/12 hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]'
-            }
-            disabled:opacity-40 disabled:cursor-not-allowed`}
+    <main className="flex flex-col min-h-screen">
+      {/* Hero */}
+      <section className="flex flex-col items-center justify-center flex-1 min-h-screen gap-6 px-6 text-center">
+        <h1
+          className="text-5xl font-bold text-white"
+          style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
-          {isActive ? 'End Session' : 'Initialize Session'}
-        </motion.button>
-      </div>
+          Cerebrocal
+        </h1>
+        <p className="text-sm text-zinc-400">Your AI scheduling concierge</p>
+        <p className="text-sm text-zinc-500 max-w-sm">
+          Speak naturally. Book instantly. No typing required.
+        </p>
+        <HeroSignInButton />
+      </section>
 
-      {/* RIGHT PANEL — Transcript */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center gap-2 px-6 py-4 border-b border-white/5">
-          <span className="text-xs text-zinc-600 uppercase tracking-widest">Conversation</span>
-          {isActive && (
-            <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="ml-auto flex items-center gap-1.5"
+      {/* Description */}
+      <section className="flex flex-col items-center gap-4 px-6 py-16 border-t border-white/5">
+        <div className="max-w-2xl text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">What is Cerebrocal?</h2>
+          <p className="text-zinc-400 leading-relaxed">
+            Cerebrocal is a real-time voice assistant that books Google Calendar events through
+            natural conversation. Just say who you want to meet, when, and what it&apos;s about —
+            the AI handles the rest, live in your calendar.
+          </p>
+        </div>
+      </section>
+
+      {/* Use Cases */}
+      <section className="flex flex-col items-center gap-8 px-6 py-16 border-t border-white/5">
+        <h2 className="text-xl font-semibold text-white">What you can do</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full">
+          {USE_CASES.map(({ icon, title, description }) => (
+            <div
+              key={title}
+              className="flex flex-col gap-2 p-6 rounded-2xl bg-white/5 border border-white/10"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-xs text-zinc-500">Live</span>
-            </motion.span>
-          )}
+              <span className="text-2xl">{icon}</span>
+              <h3 className="text-sm font-semibold text-white">{title}</h3>
+              <p className="text-xs text-zinc-400">{description}</p>
+            </div>
+          ))}
         </div>
+      </section>
 
-        {/* Transcript */}
-        <div className="flex-1 overflow-hidden">
-          <TranscriptPanel messages={transcript} isActive={isActive} />
-        </div>
-      </div>
-
-      {/* Toast */}
-      <StatusToast error={visibleError} onDismiss={handleDismiss} />
+      {/* Footer */}
+      <footer className="flex items-center px-6 py-4 border-t border-white/5">
+        <span className="text-xs text-zinc-600">© 2026 Cerebrocal</span>
+      </footer>
     </main>
   )
 }
