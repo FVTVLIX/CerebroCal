@@ -61,8 +61,8 @@ describe('LandingPage', () => {
   it('renders the expanded features section', () => {
     render(<LandingPage />)
     expect(screen.getByText('Everything you need')).toBeInTheDocument()
-    expect(screen.getAllByText(/real-time voice/i).length).toBeGreaterThan(0)
-    expect(screen.getByText(/timezone-aware/i)).toBeInTheDocument()
+    expect(screen.getByText(/no typing\. just talk/i)).toBeInTheDocument()
+    expect(screen.getByText(/works wherever you are/i)).toBeInTheDocument()
   })
 
   it('renders the privacy note', () => {

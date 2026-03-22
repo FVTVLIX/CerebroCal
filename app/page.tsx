@@ -131,7 +131,7 @@ export default function LandingPage() {
             <div key={title} className="flex items-start gap-3">
               <span className="text-xl">{icon}</span>
               <div>
-                <p className="text-sm font-medium text-white">{title}</p>
+                <p className="text-sm font-semibold text-white">{title}</p>
                 <p className="text-xs text-zinc-400">{desc}</p>
               </div>
             </div>
