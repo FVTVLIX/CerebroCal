@@ -15,8 +15,8 @@ describe('HeroSignInButton', () => {
     expect(mockSignIn).toHaveBeenCalledWith('google', { redirectTo: '/chat' })
   })
 
-  it('displays "Sign in with Google"', () => {
+  it('displays "Continue with Google"', () => {
     render(<HeroSignInButton />)
-    expect(screen.getByRole('button')).toHaveTextContent('Sign in with Google')
+    expect(screen.getByRole('button')).toHaveTextContent('Continue with Google')
   })
 })
