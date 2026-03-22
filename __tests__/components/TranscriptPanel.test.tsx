@@ -11,7 +11,7 @@ jest.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
-const makeMsg = (role: 'user' | 'ai', content: string): TranscriptMessage => ({
+const makeMsg = (role: 'user' | 'ai' | 'system', content: string): TranscriptMessage => ({
   id: crypto.randomUUID(),
   role,
   content,
@@ -34,5 +34,22 @@ describe('TranscriptPanel', () => {
   it('does not show explainer when isActive is true', () => {
     render(<TranscriptPanel messages={[]} isActive={true} />)
     expect(screen.queryByText(/speak naturally/i)).not.toBeInTheDocument()
+  })
+
+  it('renders a booking-confirmed link card for system messages', () => {
+    const messages = [makeMsg('system', 'https://calendar.google.com/event?eid=abc123')]
+    render(<TranscriptPanel messages={messages} isActive={true} />)
+    const link = screen.getByRole('link', { name: /view event in google calendar/i })
+    expect(link).toBeInTheDocument()
+    expect(link).toHaveAttribute('href', 'https://calendar.google.com/event?eid=abc123')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
+  it('does not render system messages as a chat bubble', () => {
+    const messages = [makeMsg('system', 'https://calendar.google.com/event?eid=abc123')]
+    render(<TranscriptPanel messages={messages} isActive={true} />)
+    // The URL itself should not appear as raw text
+    expect(screen.queryByText('https://calendar.google.com/event?eid=abc123')).not.toBeInTheDocument()
   })
 })
