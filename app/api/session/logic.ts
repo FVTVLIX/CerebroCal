@@ -1,6 +1,8 @@
 import { SYSTEM_PROMPT, CREATE_CALENDAR_EVENT_TOOL } from '@/lib/constants'
 
-export async function createOpenAISession(): Promise<string> {
+export async function createOpenAISession(locale: string): Promise<string> {
+  const instructions = `${SYSTEM_PROMPT}\n\nIMPORTANT: Always respond in the user's language (locale: ${locale}). If the user speaks to you in any language, reply in that same language.`
+
   const res = await fetch('https://api.openai.com/v1/realtime/sessions', {
     method: 'POST',
     headers: {
@@ -10,7 +12,7 @@ export async function createOpenAISession(): Promise<string> {
     body: JSON.stringify({
       model: 'gpt-4o-realtime-preview',
       voice: 'alloy',
-      instructions: SYSTEM_PROMPT,
+      instructions,
       tools: [CREATE_CALENDAR_EVENT_TOOL],
       tool_choice: 'auto',
       input_audio_transcription: { model: 'whisper-1' },
