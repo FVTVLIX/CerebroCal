@@ -130,6 +130,12 @@ export function useWebRTC(): UseWebRTCReturn {
                     ? 'Calendar not configured — see SETUP.md'
                     : 'Booking failed',
               })
+            } else {
+              // Surface the event link as a system message in the transcript
+              const result = calendarResult as { success?: boolean; htmlLink?: string }
+              if (result.htmlLink) {
+                addMessage('system', result.htmlLink)
+              }
             }
           } catch {
             calendarResult = { success: false, error: 'network_error' }
