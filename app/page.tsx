@@ -77,6 +77,68 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="flex flex-col items-center gap-8 px-6 py-16 border-t border-white/5">
+        <div className="max-w-2xl w-full text-center">
+          <h2 className="text-2xl font-bold text-white mb-10">How it works</h2>
+          <div className="flex flex-col gap-8">
+            {[
+              { step: '1', icon: '🔐', title: 'Sign in with Google', desc: 'Grant calendar access once. No setup required.' },
+              { step: '2', icon: '🎙', title: 'Talk naturally', desc: 'Say who, when, and what. No forms, no typing.' },
+              { step: '3', icon: '✅', title: 'Event booked instantly', desc: 'Hear confirmation the moment it lands on your calendar.' },
+            ].map(({ step, icon, title, desc }) => (
+              <div key={step} className="flex items-start gap-6 text-left">
+                <span className="text-4xl font-bold text-white/10 leading-none w-8 shrink-0">{step}</span>
+                <div>
+                  <p className="text-base font-semibold text-white mb-1">{icon} {title}</p>
+                  <p className="text-sm text-zinc-400">{desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Sample Conversation */}
+      <section className="flex flex-col items-center gap-6 px-6 py-16 border-t border-white/5">
+        <h2 className="text-2xl font-bold text-white">See it in action</h2>
+        <div className="max-w-xl w-full flex flex-col gap-3 bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="flex justify-end">
+            <div className="max-w-[80%] rounded-2xl px-4 py-2 text-sm bg-white/5 border border-white/10 text-zinc-300">
+              Schedule a meeting with Sarah tomorrow at 2pm
+            </div>
+          </div>
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-2xl px-4 py-2 text-sm bg-cyan-950/50 border border-cyan-900/40 text-cyan-100">
+              Got it. I&apos;ve added &quot;Meeting with Sarah&quot; to your calendar for tomorrow at 2:00 PM. Anything else?
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Expanded Features */}
+      <section className="flex flex-col items-center gap-8 px-6 py-16 border-t border-white/5">
+        <h2 className="text-2xl font-bold text-white">Everything you need</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 max-w-2xl w-full">
+          {[
+            { icon: '🎙', title: 'Real-time voice', desc: 'No typing. Just talk.' },
+            { icon: '🌍', title: 'Timezone-aware scheduling', desc: 'Works wherever you are.' },
+            { icon: '📅', title: 'Google Calendar native', desc: 'Books directly to your primary calendar.' },
+            { icon: '⚡', title: 'Instant audio confirmation', desc: 'Hear the result immediately.' },
+            { icon: '🔒', title: 'Your credentials only', desc: 'No shared accounts or service keys.' },
+            { icon: '📱', title: 'Works on any device', desc: 'Any browser with a microphone.' },
+          ].map(({ icon, title, desc }) => (
+            <div key={title} className="flex items-start gap-3">
+              <span className="text-xl">{icon}</span>
+              <div>
+                <p className="text-sm font-medium text-white">{title}</p>
+                <p className="text-xs text-zinc-400">{desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Use Cases */}
       <section className="flex flex-col items-center gap-8 px-6 py-16 border-t border-white/5">
         <h2 className="text-xl font-semibold text-white">What you can do</h2>
@@ -92,6 +154,15 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Privacy Note */}
+      <section className="flex flex-col items-center px-6 py-6 border-t border-b border-white/5">
+        <p className="max-w-2xl text-center text-sm text-zinc-400">
+          🔒 <strong className="text-zinc-300">Privacy first.</strong> Cerebrocal requests Google Calendar
+          access only to create events on your behalf. We do not read your existing events, store your
+          calendar data, or share anything with third parties.
+        </p>
       </section>
 
       {/* Footer */}
