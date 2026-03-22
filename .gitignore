@@ -56,3 +56,4 @@ next-env.d.ts
 !package-lock.json
 !tsconfig.json
 !.env.example
+.worktrees/
