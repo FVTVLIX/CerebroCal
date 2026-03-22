@@ -1,3 +1,5 @@
+[![Cerebro Cal Banner](https://lh3.googleusercontent.com/pw/AP1GczNsKs_DdJYKJOPwh4JREnUwsf9bSxtc67BTM0GeWewOoG_QsTPFMj5Hj-4nD_jortsQy6AKHUY5OVHmzpuX-xlSruT91D8forrtFjwTvpB1u4qkPiSCzbwOqwqvxVge2t3O06YBWcyFSBWKWZInPoTYjg=w1408-h768-s-no-gm?authuser=0)](https://cerebrocal.vercel.app/)
+
 # Cerebro Cal
 
 Cerebro Cal is an advanced, real-time voice scheduling assistant that acts as a personal concierge. By operating completely through natural conversation, it removes the friction of manual data entry, traditional forms, and complex calendar management. Users can simply speak their scheduling intents, and Cerebro Cal seamlessly interfaces with Google Calendar to book, adjust, and confirm events instantly.
