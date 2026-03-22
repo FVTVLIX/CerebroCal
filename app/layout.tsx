@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Space_Grotesk } from 'next/font/google'
 import { GeistSans } from 'geist/font/sans'
+import { Providers } from './providers'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -21,7 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${spaceGrotesk.variable} ${GeistSans.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
