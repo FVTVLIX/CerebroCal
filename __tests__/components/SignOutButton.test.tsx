@@ -9,10 +9,10 @@ jest.mock('next-auth/react', () => ({
 beforeEach(() => mockSignOut.mockReset())
 
 describe('SignOutButton', () => {
-  it('calls signOut with redirectTo /signin on click', () => {
+  it('calls signOut with redirectTo / on click', () => {
     render(<SignOutButton />)
     fireEvent.click(screen.getByRole('button'))
-    expect(mockSignOut).toHaveBeenCalledWith({ redirectTo: '/signin' })
+    expect(mockSignOut).toHaveBeenCalledWith({ redirectTo: '/' })
   })
 
   it('displays "Sign out"', () => {

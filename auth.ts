@@ -15,9 +15,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  pages: {
-    signIn: '/signin',
-  },
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
